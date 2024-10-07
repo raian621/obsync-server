@@ -1,0 +1,523 @@
+openapi: 3.0.0
+info:
+  title: Obsync Plugin Server - OpenAPI 3.1
+  description: |-
+    Obsync Plugin server API
+  contact:
+    email: ryanzbell@proton.me
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit
+  version: 1.0.0
+
+servers:
+  - url: 'http://localhost:8000/api/v1'
+
+tags:
+  - name: files
+    description: File management endpoints
+  - name: users
+    description: User endpoints
+  - name: apikeys
+    description: Used to manage API keys
+  - name: documentation
+    description: OpenAPI documentation
+
+paths:
+  /files/{filename}:
+    get:
+      tags: [files]
+      summary: Download a file from the sync server
+      security: 
+        - cookie_auth: []
+        - api_key: []
+      parameters:
+        - name: filename
+          description: Name of the file
+          in: path
+          schema:
+            type: string
+          required: true
+        - name: If-None-Match
+          in: header
+          description: MD5 hash used to detect whether a file is already downloaded locally
+          required: false
+          schema:
+            type: string
+            example: b1946ac92492d2347c6235b4d2611184
+      responses:
+        '200':
+          description: A markdown document, image, or other miscellaneous file used by Obsidian 
+          content:
+            text/markdown: {}
+            image/png: {}
+            image/jpeg: {}
+            image/webp: {}
+            image/gif: {}
+            application/octet-stream: {}
+        '304':
+          description: The file on the server has not been updated, so no need to redownload it
+    post:
+      tags: [files]
+      summary: Upload a file to the sync server
+      security: 
+        - cookie_auth: []
+        - api_key: []
+      parameters:
+        - name: filename
+          description: Name of the file
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          text/markdown: {}
+          image/png: {}
+          image/jpeg: {}
+          image/webp: {}
+          image/gif: {}
+          application/octet-stream: {}
+      responses:
+        '200':
+          description: File successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags: [files]
+      summary: Update a file on the sync server
+      security: 
+        - cookie_auth: []
+        - api_key: []
+      parameters:
+        - name: filename
+          description: Name of the file
+          in: path
+          schema:
+            type: string
+          required: true
+        - name: If-None-Match
+          in: header
+          description: MD5 hash used to detect whether a file is already downloaded locally
+          required: false
+          schema:
+            type: string
+            example: b1946ac92492d2347c6235b4d2611184
+      responses:
+        '200':
+          description: File successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '304':
+          description: The file on the server has already been updated, so no need to update it
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: File does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags: [files]
+      summary: Delete a file on the sync server
+      security:
+        - cookie_auth: []
+        - api_key: []
+      parameters:
+        - name: filename
+          description: Name of the file
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: File successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: File does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /list-files:
+    get:
+      tags: [files]
+      summary: Get a list of files that are synced to the server
+      security:
+        - cookie_auth: []
+        - api_key: []
+      responses:
+        '200':
+          $ref: '#/components/responses/FileList'
+  /user/login:
+    post:
+      tags: [users]
+      summary: Log in a user
+      responses:
+        '200':
+          description: Successful login
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: OBSYNC_SESSION_ID=abcde12345; Path=/; HttpOnly
+        '404':
+          description: Incorrect username or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /user/logout:
+    post:
+      tags: [users]
+      summary: Log out a user
+      security: 
+        - cookie_auth: []
+      responses:
+        '200':
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /user:
+    post:
+      tags: [users]
+      summary: Create a user
+      security:
+        - cookie_auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User was successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: One or more of the fields in the user's input is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: A user with the same username or email provided already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags: [users]
+      summary: Delete a user
+      security: 
+        - cookie_auth: []
+      responses:
+        '200':
+          description: User successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: User does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /user/username:
+    put:
+      tags: [users]
+      summary: Let users update their username
+      security:
+        - cookie_auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              example: 'Super secure password'
+              minLength: 8
+      responses:
+        '200':
+          description: User's username successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /user/email:
+    put:
+      tags: [users]
+      summary: Let users update their email
+      security:
+        - cookie_auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              example: 'Super secure password'
+              minLength: 8
+      responses:
+        '200':
+          description: User's email successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /user/password:
+    put:
+      tags: [users]
+      summary: Let users update their password
+      security:
+        - cookie_auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              example: 'Super secure password'
+              minLength: 8
+      responses:
+        '200':
+          description: User's password successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /apikeys:
+    get:
+      tags: [apikeys]
+      summary: Get API key info
+      security:
+        - cookie_auth: []
+      parameters:
+        - name: name
+          description: Name of the API key
+          in: query
+          schema:
+            type: string
+            example: desktop-key
+      responses:
+        '200':
+          description: API key with name was found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKey'
+        '404':
+          description: API key with name not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [apikeys]
+      summary: Create an API key
+      security:
+        - cookie_auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKey'
+      responses:
+        '200':
+          description: |
+            Successful API key creation. Returns the created API key in plaintext, but doesn't
+            save the plaintext in the database.
+          content:
+            application/json:
+              schema:
+                type: string
+        '409':
+          description: An API key with `name` already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags: [apikeys]
+      summary: Create an API key
+      security:
+        - cookie_auth: []
+      responses:
+        '200':
+          description: API key successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: API key does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /openapi.yaml:
+    get:
+      tags: [documentation]
+      summary: Get the OpenAPI spec in YAML format
+      responses:
+        '200':
+          description: OpenAPI spec
+          content:
+            application/yaml:
+              schema:
+                type: string
+                format: binary
+                example: |
+                    openapi: 3.1.0
+                    info:
+                      title: Obsync Plugin Server - OpenAPI 3.1
+                      description: |-
+                        Obsync Plugin server API
+  /docs:
+    get:
+      tags: [documentation]
+      summary: Get the Redoc OpenAPI documentation page
+      responses:
+        '200':
+          description: Documentation page
+          content:
+            text/html: {}
+    
+  /redoc.standalone.js:
+    get:
+      tags: [documentation]
+      summary: Get the Redoc script that's stored locally on the server
+      responses:
+        '200':
+          description: Redoc JavaScript bundle
+          content:
+            text/javascript: {}
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        username:
+          type: string
+          example: theUser
+          format: username
+        email:
+          type: string
+          example: john@email.com
+          format: email
+        password:
+          type: string
+          example: '12345'
+    File:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 29
+        filename:
+          type: string
+          example: 'SchoolVault/CSCE4600/Process Scheduling'
+        etag:
+          type: string
+          example: 'b1946ac92492d2347c6235b4d2611184'
+          description: md5 hash of the file
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 21
+        name:
+          type: string
+          example: laptop-key
+        active:
+          type: boolean
+
+  requestBodies:
+    UserUpdate:
+      description: User updated information
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/User'
+
+  responses:
+    FileList:
+      description: A list of files synced to the server
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/File'
+
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
+
+    cookie_auth:
+      type: apiKey
+      name: OBSYNC_SESSION_ID
+      in: header
