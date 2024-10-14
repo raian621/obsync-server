@@ -7,12 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/raian621/obsync-server/database"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestStartServer(t *testing.T) {
-	t.Parallel()
-
 	var (
 		host = "0.0.0.0"
 		port = 8001
@@ -37,4 +36,6 @@ func TestStartServer(t *testing.T) {
 	res, err = http.Get(url)
 	assert.NotNil(t, err)
 	assert.Nil(t, res)
+
+  database.SetDB(nil)
 }

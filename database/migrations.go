@@ -23,41 +23,57 @@ var migrations = []migration{
 			");"},
 			"\n",
 		),
-  },
-  {
-    name: "CreateSessionsTable",
-    sqlStatement: strings.Join([]string{
-      "CREATE TABLE sessions (",
-      "  id          INTEGER  PRIMARY KEY AUTOINCREMENT,",
-      "  session_key CHAR(36) UNIQUE NOT NULL,",
-      "  expires     TEXT     NOT NULL,",
-      "  user_id     INTEGER  REFERENCES users(id) ON DELETE CASCADE",
-      ");"},
-      "\n",
-    ),
-  },
+	},
+	{
+		name: "CreateSessionsTable",
+		sqlStatement: strings.Join([]string{
+			"CREATE TABLE sessions (",
+			"  id          INTEGER  PRIMARY KEY AUTOINCREMENT,",
+			"  session_key CHAR(36) UNIQUE NOT NULL,",
+			"  expires     TEXT     NOT NULL,",
+			"  user_id     INTEGER  REFERENCES users(id) ON DELETE CASCADE",
+			");"},
+			"\n",
+		),
+	},
+	{
+		name: "CreateFileSyncTable",
+		sqlStatement: strings.Join([]string{
+			"CREATE TABLE file_syncs (",
+			"  id         INTEGER      PRIMARY KEY AUTOINCREMENT,",
+			"  filepath   VARCHAR(500) UNIQUE NOT NULL,",
+			"  etag       CHAR(32)     NOT NULL,",
+			"  created_at TEXT         NOT NULL,",
+			"  updated_at TEXT         NOT NULL,",
+			"  user_id    INTEGER      REFERENCES users(id) ON DELETE CASCADE",
+			")"},
+			"\n",
+		),
+	},
 }
 
 func CreateMigrationsTable(db *sql.DB) error {
 	_, err := db.Exec(
 		"CREATE TABLE IF NOT EXISTS migrations (\n" +
-		"  id   INTEGER      PRIMARY KEY AUTOINCREMENT,\n" +
-		"  name VARCHAR(100) UNIQUE NOT NULL\n" +
-		");",
+			"  id   INTEGER      PRIMARY KEY AUTOINCREMENT,\n" +
+			"  name VARCHAR(100) UNIQUE NOT NULL\n" +
+			");",
 	)
 	return err
 }
 
-func (m *migration) Apply(db *sql.DB) error {
-	log.Printf("Applying migration `%s`...\n", m.name)
-	log.Println(m.sqlStatement)
-  
-  // check if the migration needs to be applied, if not, return early
+func (m *migration) Apply(db *sql.DB, echo bool) error {
+	if echo {
+		log.Printf("Applying migration `%s`...\n", m.name)
+		log.Println(m.sqlStatement)
+	}
+
+	// check if the migration needs to be applied, if not, return early
 	row := db.QueryRow(
 		"SELECT COUNT(*) FROM migrations WHERE name=?",
 		m.name,
 	)
-  var count int
+	var count int
 	if err := row.Scan(&count); err != nil {
 		return err
 	}
@@ -65,8 +81,8 @@ func (m *migration) Apply(db *sql.DB) error {
 		log.Println("Migration already applied...")
 		return nil
 	}
-  
-  // apply migration
+
+	// apply migration
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -89,10 +105,9 @@ func ApplyMigrations(db *sql.DB) error {
 		return err
 	}
 	for _, migration := range migrations {
-		if err := migration.Apply(db); err != nil {
+		if err := migration.Apply(db, false); err != nil {
 			return err
 		}
 	}
 	return nil
 }
-

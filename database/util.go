@@ -14,6 +14,12 @@ import (
 var ErrInvalidPassword = errors.New("password does not match passhash")
 var ErrArgon2idVersion = errors.New("argon2id version does not match the version used in hash")
 
+const ISO_8601_FORMAT = "2006-01-02 15:04:05.999999999+00:00"
+
+type Scannable interface {
+	Scan(dest ...any) error
+}
+
 type Argon2idParams struct {
 	hash        []byte
 	salt        []byte
@@ -136,14 +142,14 @@ func randomBytes(length uint) ([]byte, error) {
 }
 
 func generateSessionKey(length uint) (string, error) {
-  if b, err := randomBytes(length); err != nil {
-    return "", err
-  } else {
-    return base64.RawStdEncoding.EncodeToString(b), nil
-  }
+	if b, err := randomBytes(length); err != nil {
+		return "", err
+	} else {
+		return base64.RawStdEncoding.EncodeToString(b), nil
+	}
 }
 
 func validEmail(email string) bool {
-  _, err := mail.ParseAddress(email)
-  return err == nil
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }

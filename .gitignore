@@ -33,3 +33,6 @@ sqlite.db
 
 # tmp files used by air
 tmp/*
+
+# server binary
+obsync-server
