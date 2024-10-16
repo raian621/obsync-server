@@ -50,6 +50,37 @@ var migrations = []migration{
 			"\n",
 		),
 	},
+	{
+		name: "RemoveUniqueConstraintFromFileSyncFilepath",
+		sqlStatement: strings.Join([]string{
+			"ALTER TABLE file_syncs RENAME TO file_syncs_tmp;",
+			"CREATE TABLE file_syncs (",
+			"  id         INTEGER      PRIMARY KEY AUTOINCREMENT,",
+			"  filepath   VARCHAR(500) NOT NULL,",
+			"  etag       CHAR(32)     NOT NULL,",
+			"  created_at TEXT         NOT NULL,",
+			"  updated_at TEXT         NOT NULL,",
+			"  user_id    INTEGER      REFERENCES users(id) ON DELETE CASCADE",
+			");",
+			"INSERT INTO file_syncs SELECT * FROM file_syncs_tmp;",
+			"DROP TABLE file_syncs_tmp;"},
+			"\n",
+		),
+	},
+	{
+		name: "CreateApiKeyTable",
+		sqlStatement: strings.Join([]string{
+			"CREATE TABLE api_keys (",
+			"  id         INTEGER      PRIMARY KEY AUTOINCREMENT,",
+			"  name       VARCHAR(200),",
+			"  hash       CHAR(97),",
+			"  active     INTEGER,",
+			"  created_at TEXT,",
+			"  user_id    INTEGER      REFERENCES users(id) ON DELETE CASCADE",
+			")"},
+			"\n",
+		),
+	},
 }
 
 func CreateMigrationsTable(db *sql.DB) error {

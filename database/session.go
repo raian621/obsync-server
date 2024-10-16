@@ -30,7 +30,7 @@ func LoginUser(db *sql.DB, username, password string) (*Session, error) {
 		}
 		return nil, err // unexpected error
 	}
-	if err := ValidatePassword(password, passhash); err != nil {
+	if err := ValidateHash(password, passhash); err != nil {
 		if err == ErrInvalidPassword {
 			return nil, ErrIncorrectCredentials
 		}

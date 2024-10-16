@@ -93,7 +93,7 @@ func HashPassword(password string) (string, error) {
 	})
 }
 
-func ValidatePassword(password, passhash string) error {
+func ValidateHash(password, passhash string) error {
 	params := &Argon2idParams{}
 	if err := params.Parse(passhash); err != nil {
 		return err

@@ -84,7 +84,7 @@ func TestCreateUser(t *testing.T) {
 			if err == nil {
 				assert.Equal(t, tc.username, user.Username)
 				assert.Equal(t, tc.email, user.Email)
-				assert.NoError(t, ValidatePassword(tc.password, user.Passhash))
+				assert.NoError(t, ValidateHash(tc.password, user.Passhash))
 				_, err = testdb.Exec(
 					"DELETE FROM users WHERE id=:id",
 					sql.Named("id", user.Id),

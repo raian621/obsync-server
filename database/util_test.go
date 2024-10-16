@@ -20,8 +20,8 @@ func TestValidateHash(t *testing.T) {
 	passhash, err := HashPassword(password)
 	assert.NoError(t, err)
 	assert.Equal(t, len(passhash), 97)
-	assert.NoError(t, ValidatePassword(password, passhash))
+	assert.NoError(t, ValidateHash(password, passhash))
 
 	incorrect := "this is not the password"
-	assert.Error(t, ErrInvalidPassword, ValidatePassword(incorrect, passhash))
+	assert.Error(t, ErrInvalidPassword, ValidateHash(incorrect, passhash))
 }
