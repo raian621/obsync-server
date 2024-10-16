@@ -141,7 +141,7 @@ func randomBytes(length uint) ([]byte, error) {
 	return b, nil
 }
 
-func generateSessionKey(length uint) (string, error) {
+func generateKey(length uint) (string, error) {
 	if b, err := randomBytes(length); err != nil {
 		return "", err
 	} else {

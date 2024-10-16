@@ -179,7 +179,7 @@ func CreateSession(db *sql.DB, userId uint64) (*Session, error) {
 	// make sure session keys aren't duplicated. it's very unlikely there will
 	// ever be duplicate session keys, but I'd rather be correct than unlucky.
 	for count > 0 {
-		sessionKey, err = generateSessionKey(uint(sessionKeyBytes))
+		sessionKey, err = generateKey(uint(sessionKeyBytes))
 		if err != nil {
 			return nil, err
 		}
@@ -338,3 +338,37 @@ func scanSyncFile(row Scannable) (*SyncFile, error) {
 }
 
 // ApiKey model functions
+
+func CreateApiKey(db *sql.DB, userId uint64, name, key string) (*ApiKey, error) {
+	hash, err := HashPassword(key)
+	now := time.Now().UTC()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = db.Exec(
+		"INSERT INTO api_keys (user_id, hash, active, created_at)"+
+			"VALUES (:user_id, :hash, :active, :created_at)",
+		sql.Named("user_id", userId),
+		sql.Named("hash", hash),
+		sql.Named("active", true),
+		sql.Named("created_at", now),
+	)
+	if err != nil {
+		return nil, err
+	}
+	var id uint64
+	row := db.QueryRow("SELECT id FROM api_keys WHERE name=?", name)
+	if err := row.Scan(&id); err != nil {
+		return nil, err
+	}
+
+	return &ApiKey{
+		Id:        id,
+		UserId:    userId,
+		Name:      name,
+		Hash:      hash,
+		Active:    true,
+		CreatedAt: now,
+	}, nil
+}
