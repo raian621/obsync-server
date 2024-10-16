@@ -260,7 +260,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
         '400':
-          description: 
+          description: Invalid username 
           content:
             application/json:
               schema:

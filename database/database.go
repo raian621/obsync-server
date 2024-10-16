@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,7 +13,11 @@ import (
 const SQL_PROVIDER = "sqlite3"
 const DEFAULT_DB_PATH = "default-sqlite.db?mode=memory"
 
-var db *sql.DB
+var (
+	ErrNoResults            = errors.New("query returned no results")
+	ErrIncorrectCredentials = errors.New("username or password incorrect")
+	db                      *sql.DB
+)
 
 // Get the module's database object. If the module's database object hasn't
 // been set yet, create the module's database object and return it.

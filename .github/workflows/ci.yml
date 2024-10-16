@@ -1,7 +1,9 @@
 on:
   push:
+    paths: [ "**.go" ]
     branches: [ "main" ]
   pull_request:
+    paths: [ "**.go" ]
     branches: [ "main" ]
 
 jobs:
@@ -10,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download redoc bundle and page
+      - name: Download redoc bundle
         run: ./scripts/download_redoc_bundle.sh
 
       - uses: actions/setup-go@v4
@@ -23,7 +25,7 @@ jobs:
          version: v1.54
 
       - name: Run coverage
-        run: go test -race -coverprofile=coverage.out -covermode=atomic
+        run: go test -race -coverprofile=coverage.out
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
