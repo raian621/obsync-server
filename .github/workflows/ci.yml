@@ -10,6 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download redoc bundle and page
+        run: ./scripts/download_redoc_bundle.sh
+
       - uses: actions/setup-go@v4
         with:
           go-version: 1.22
@@ -23,4 +26,6 @@ jobs:
         run: go test -race -coverprofile=coverage.out -covermode=atomic
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
