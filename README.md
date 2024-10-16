@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/raian621/obsync-server/graph/badge.svg?token=VNEFZMUP9R)](https://codecov.io/gh/raian621/obsync-server)
+
 # Obsync Plugin Server
 
 File sync server for the Obsync plugin for Obsidian.
