@@ -36,3 +36,6 @@ tmp/*
 
 # server binary
 obsync-server
+
+# config file
+config.yaml

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/raian621/obsync-server/config"
 	"github.com/raian621/obsync-server/database"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +20,13 @@ func TestStartServer(t *testing.T) {
 	)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	go startServer("test-start-server.db?mode=memory", host, port, ctx)
+
+	go startServer("test-start-server.db?mode=memory", &config.Config{
+		Type: "FileSystem",
+		Root: t.TempDir(),
+		Host: "localhost",
+		Port: 8001,
+	}, ctx)
 
 	// wait for the server to start up, then try to hit an endpoint
 	time.Sleep(time.Second)
@@ -37,5 +44,5 @@ func TestStartServer(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Nil(t, res)
 
-  database.SetDB(nil)
+	database.SetDB(nil)
 }

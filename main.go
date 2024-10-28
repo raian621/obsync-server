@@ -14,15 +14,20 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/raian621/obsync-server/api"
+	"github.com/raian621/obsync-server/config"
 	"github.com/raian621/obsync-server/database"
 	"github.com/raian621/obsync-server/server"
 )
 
 func main() {
-	startServer("sqlite.db", "0.0.0.0", 8000, context.Background())
+	config, err := config.ReadConfigFromFile("config.yaml")
+	if err != nil {
+		panic(err)
+	}
+	startServer("sqlite.db", config, context.Background())
 }
 
-func startServer(connStr, hostname string, port int, serverCtx context.Context) {
+func startServer(connStr string, cfg *config.Config, serverCtx context.Context) {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Logger.SetLevel(log.INFO)
@@ -34,12 +39,15 @@ func startServer(connStr, hostname string, port int, serverCtx context.Context) 
 	if err := database.ApplyMigrations(db); err != nil {
 		e.Logger.Fatal(err)
 	}
-	server := server.NewServer(db)
+	server, err := server.NewServer(db, cfg.Type)
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
 	api.RegisterHandlersWithBaseURL(e, server, "/api/v1")
 
 	ctx, stop := signal.NotifyContext(serverCtx, os.Interrupt)
 	go func() {
-		if err := e.Start(fmt.Sprintf("%s:%d", hostname, port)); err != nil && err != http.ErrServerClosed {
+		if err := e.Start(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)); err != nil && err != http.ErrServerClosed {
 			e.Logger.Fatal("shutting down the server")
 		}
 	}()
