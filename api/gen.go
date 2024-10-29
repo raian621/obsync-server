@@ -10,7 +10,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
@@ -29,7 +28,6 @@ type ApiKey struct {
 type ApiResponse struct {
 	Code    *int32  `json:"code,omitempty"`
 	Message *string `json:"message,omitempty"`
-	Type    *string `json:"type,omitempty"`
 }
 
 // File defines model for File.
@@ -45,10 +43,10 @@ type File struct {
 
 // User defines model for User.
 type User struct {
-	Email    *openapi_types.Email `json:"email,omitempty"`
-	Id       *int64               `json:"id,omitempty"`
-	Password *string              `json:"password,omitempty"`
-	Username *string              `json:"username,omitempty"`
+	Email    string `json:"email"`
+	Id       *int64 `json:"id,omitempty"`
+	Password string `json:"password"`
+	Username string `json:"username"`
 }
 
 // FileList defines model for FileList.
@@ -75,6 +73,12 @@ type PutFilesFilenameParams struct {
 // PutUserEmailJSONBody defines parameters for PutUserEmail.
 type PutUserEmailJSONBody = string
 
+// PostUserLoginJSONBody defines parameters for PostUserLogin.
+type PostUserLoginJSONBody struct {
+	Password string `json:"password"`
+	Username string `json:"username"`
+}
+
 // PutUserPasswordJSONBody defines parameters for PutUserPassword.
 type PutUserPasswordJSONBody = string
 
@@ -90,6 +94,9 @@ type PostUserJSONRequestBody = User
 // PutUserEmailJSONRequestBody defines body for PutUserEmail for application/json ContentType.
 type PutUserEmailJSONRequestBody = PutUserEmailJSONBody
 
+// PostUserLoginJSONRequestBody defines body for PostUserLogin for application/json ContentType.
+type PostUserLoginJSONRequestBody PostUserLoginJSONBody
+
 // PutUserPasswordJSONRequestBody defines body for PutUserPassword for application/json ContentType.
 type PutUserPasswordJSONRequestBody = PutUserPasswordJSONBody
 
@@ -98,7 +105,7 @@ type PutUserUsernameJSONRequestBody = PutUserUsernameJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Create an API key
+	// Delete an API key
 	// (DELETE /apikeys)
 	DeleteApikeys(ctx echo.Context) error
 	// Get API key info

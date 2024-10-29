@@ -32,9 +32,9 @@ func TestStartServer(t *testing.T) {
 	time.Sleep(time.Second)
 
 	res, err := http.Get(url)
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
-	assert.Equal(t, res.StatusCode, http.StatusOK)
+	if !assert.NoError(t, err) || !assert.NotNil(t, res) || !assert.Equal(t, res.StatusCode, http.StatusOK) {
+		t.FailNow()
+	}
 
 	// wait for server to shutdown, then try to hit an endpoint (request should fail)
 	<-ctx.Done()

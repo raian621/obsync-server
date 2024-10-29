@@ -39,7 +39,7 @@ func startServer(connStr string, cfg *config.Config, serverCtx context.Context) 
 	if err := database.ApplyMigrations(db); err != nil {
 		e.Logger.Fatal(err)
 	}
-	server, err := server.NewServer(db, cfg.Type)
+	server, err := server.NewServer(db, cfg.Root)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}

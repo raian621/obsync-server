@@ -2,12 +2,15 @@ package database
 
 import (
 	"database/sql"
+	"errors"
+	"log"
 	"time"
 )
 
 var (
-	sessionTime     = 72 * time.Hour
-	sessionKeyBytes = 16
+	sessionTime       = 72 * time.Hour
+	sessionKeyBytes   = 16
+	ErrExpiredSession = errors.New("session expired")
 )
 
 type Session struct {
@@ -68,7 +71,7 @@ func CreateSession(db *sql.DB, userId uint64) (*Session, error) {
 		}
 	}
 
-	expires := time.Now().Add(sessionTime)
+	expires := time.Now().UTC().Add(sessionTime)
 	_, err = db.Exec(
 		"INSERT INTO sessions (user_id, session_key, expires)\n"+
 			"  VALUES (:user_id, :session_key, :expires)",
@@ -94,7 +97,38 @@ func CreateSession(db *sql.DB, userId uint64) (*Session, error) {
 	}, nil
 }
 
+func DeleteSession(db *sql.DB, sessionKey string) error {
+	_, err := db.Exec("DELETE FROM sessions WHERE session_key=?", sessionKey)
+	return err
+}
+
 func DeleteExpiredSessions(db *sql.DB) error {
 	_, err := db.Exec("DELETE FROM sessions WHERE expires<datetime('now')")
 	return err
+}
+
+func GetSessionBySessionKey(db *sql.DB, sessionKey string) (*Session, error) {
+	var (
+		session    Session
+		expiresStr string
+		err        error
+	)
+
+	row := db.QueryRow("SELECT id, user_id, expires FROM sessions WHERE session_key=?", sessionKey)
+	if err := row.Scan(&session.Id, &session.UserId, &expiresStr); err != nil {
+		return nil, err
+	}
+	session.Expires, err = time.Parse(ISO_8601_FORMAT, expiresStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if session.Expires.Before(time.Now()) {
+		if err := DeleteSession(db, sessionKey); err != nil {
+			log.Println(err)
+		}
+		return nil, ErrExpiredSession
+	}
+
+	return &session, nil
 }

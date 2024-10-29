@@ -48,6 +48,10 @@ func NewDB(connStr string) (*sql.DB, error) {
 	return sql.Open(SQL_PROVIDER, path)
 }
 
+func ExistingDB() bool {
+	return db != nil
+}
+
 func getAbsoluteDbPath(path string) (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {

@@ -164,6 +164,22 @@ paths:
     post:
       tags: [users]
       summary: Log in a user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: mysusername
+                password:
+                  type: string
+                  example: supersecure1234
+              required:
+                - username
+                - password
+
       responses:
         '200':
           description: Successful login
@@ -376,7 +392,7 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
     delete:
       tags: [apikeys]
-      summary: Create an API key
+      summary: Delete an API key
       security:
         - cookie_auth: []
       responses:
@@ -446,10 +462,13 @@ components:
         email:
           type: string
           example: john@email.com
-          format: email
         password:
           type: string
           example: '12345'
+      required:
+        - username
+        - email
+        - password
     File:
       type: object
       properties:
@@ -476,8 +495,6 @@ components:
         code:
           type: integer
           format: int32
-        type:
-          type: string
         message:
           type: string
     ApiKey:

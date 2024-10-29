@@ -104,3 +104,36 @@ func GetUserById(db *sql.DB, id uint64) (*User, error) {
 
 	return &user, nil
 }
+
+func DeleteUser(db *sql.DB, id uint64) error {
+	_, err := db.Exec("DELETE FROM users WHERE id=?", id)
+	return err
+}
+
+func UpdateUserEmail(db *sql.DB, id uint64, email string) error {
+	if !validEmail(email) || len(email) > 200 {
+		return ErrEmailFormat
+	}
+	_, err := db.Exec("UPDATE users SET email=? WHERE id=?", email, id)
+	return err
+}
+
+func UpdateUserPassword(db *sql.DB, id uint64, password string) error {
+	if len(password) < 8 {
+		return ErrPasswordLength
+	}
+	passhash, err := HashPassword(password)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("UPDATE users SET passhash=? WHERE id=?", passhash, id)
+	return err
+}
+
+func UpdateUserUsername(db *sql.DB, id uint64, username string) error {
+	if len(username) == 0 || len(username) > 100 {
+		return ErrUsernameFormat
+	}
+	_, err := db.Exec("UPDATE users SET username=? WHERE id=?", username, id)
+	return err
+}
