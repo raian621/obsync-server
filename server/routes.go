@@ -143,7 +143,10 @@ func (o *ObsyncServer) PostUser(ctx echo.Context) error {
 func (o *ObsyncServer) PostUserLogin(ctx echo.Context) error {
 	var credentials api.PostUserLoginJSONBody
 	encoder := json.NewDecoder(ctx.Request().Body)
-	encoder.Decode(&credentials)
+	if err := encoder.Decode(&credentials); err != nil {
+		ctx.Logger().Error(err)
+		return sendApiMessage(ctx, http.StatusInternalServerError, "unexpected error occurred")
+	}
 
 	// check if the user exists
 	user, err := database.GetUserByUsername(o.db, credentials.Username)
